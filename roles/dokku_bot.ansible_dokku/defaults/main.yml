@@ -1,0 +1,14 @@
+dokku_daemon_install: true
+dokku_daemon_version: 0.0.2
+dokku_hostname: dokku.me
+dokku_key_file: ./id_rsa.pub
+dokku_manage_nginx: false
+dokku_packages_state: latest
+dokku_plugins: {}
+dokku_skip_key_file: 'false'
+dokku_version: ''
+dokku_vhost_enable: 'false'
+dokku_web_config: 'false'
+herokuish_version: ''
+plugn_version: ''
+sshcommand_version: ''

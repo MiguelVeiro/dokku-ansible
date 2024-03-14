@@ -1,0 +1,9 @@
+---
+- hosts: all
+
+  vars:
+    pip_install_packages:
+      - name: docker
+      
+  roles:
+    - dokku_bot.ansible_dokku
