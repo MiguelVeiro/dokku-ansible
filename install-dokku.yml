@@ -1,9 +1,14 @@
 ---
-- hosts: all
+- hosts: pc-servidor
+
+  roles:
+    - dokku_bot.ansible_dokku
 
   vars:
     pip_install_packages:
       - name: docker
+    dokku_users:
+      - name: pc-cliente
+        username: pc-cliente
+        ssh_key: /home/user/.ssh/pc-cliente.pub
       
-  roles:
-    - dokku_bot.ansible_dokku
