@@ -1,3 +1,10 @@
+<?php
+include_once "./class/SessionManager.php";
+
+$sessionManager = new SessionManager;
+
+?>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -48,25 +55,9 @@
                                             </div>
                                         </form>
                                         <?php
-                                            session_start();
-                                            if ($_SERVER['REQUEST_METHOD'] == 'POST') {
-                                                $username = $_POST['username'];
-                                                $password = $_POST['password'];
-
-                                                if ( isset($_POST['invitado']) ) {
-                                                    header('Location: index.php');
-                                                    exit;
-                                                }
-
-                                                if ($username === 'admin' && $password === 'admin') {
-                                                    $_SESSION['loggedin'] = true;
-                                                    $_SESSION['username'] = $username;
-                                                    header('Location: index.php');
-                                                    exit;
-                                                } else {
-                                                    echo "Credenciales incorrectas.";
-                                                }
-                                            }
+                                        if ($sessionManager->login() === false) {
+                                            echo "Credenciales incorrectas.";
+                                        }
                                         ?>
                                     </div>
                                 </div>

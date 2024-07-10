@@ -1,12 +1,13 @@
 <?php
-session_start();
-$username = isset($_SESSION['username']) ? $_SESSION['username'] : "Invitado";
+include_once "./class/FormProcessor.php";
+include_once "./class/SessionManager.php";
 
-if (isset($_POST['logout'])) {
-    session_destroy();
-    header("Location: login.php");
-    exit;
-}
+$formProcessor = new FormProcessor();
+$sessionManager = new SessionManager();
+
+$sessionManager->manageSession();
+$username = $sessionManager->username;
+
 ?>
 <!DOCTYPE html>
 <html lang="es">
@@ -21,105 +22,17 @@ if (isset($_POST['logout'])) {
 <body style="background-color: #10204c;">
     <div class="container-fluid p-0 m-0 vh-100">
         <?php
-            $target_dir = "./uploads/"; // Carpeta donde se guardarán los archivos
 
-            $exito = "";
-            $motivo = "";
+            $respuesta = $formProcessor->processRequest();
 
-            if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['confirm'])) {
-                
-                $nombre_usuario = $_POST['nombre_usuario'];
-                $nombre_app = $_POST['nombre_app'];
-                $clave_pub = $_POST['clave_pub'];
-
-                $output = shell_exec('sudo /home/user/add-request.sh ' . $clave_pub . ' ' . $nombre_usuario . ' ' . $nombre_app);
-
-                echo $output;
+            if (!is_null($respuesta)) {
+            
+                $exito = $respuesta["exito"];
+                $motivo = $respuesta["motivo"];
+                $uploadOk = $respuesta["uploadOk"];
 
             }
-
-            // Descartar solicitudes
-            if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['discard'])) {
-
-                $id_to_discard = $_POST['id-to-discard'];
-
-                $csv_stream = fopen('./uploads/bd.csv', 'r');
-                if (!$csv_stream) {
-                    $uploadOk = 0;
-                    $motivo = "No se pudo abrir el archivo para leer las solicitudes"; }
-                else {
-
-                    $solicitudes = array();
-                    $num_fila = 0;
-                    while( ($fila = fgetcsv($csv_stream)) != FALSE ) {
-                        if ( strval($num_fila) === $id_to_discard ) {
-                            $output = shell_exec('sudo rm ./uploads/' . $fila[5]);
-                        } else {
-                            array_push($solicitudes, $fila);
-                        }
-                        $num_fila++;
-                    }
-                    fclose($csv_stream);
-
-                    $csv_stream = fopen('./uploads/bd.csv', 'w');
-                    foreach ($solicitudes as $solicitud) {
-                        fputcsv($csv_stream, $solicitud);
-                    }
-                    fclose($csv_stream);
-
-                    $uploadOk = 1;
-                    $motivo = "Solicitud denegada con éxito." . $archivo;
-
-                }
-
-
-            }
-
-            if ( $_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['submit']) ) {
-
-                $uploadOk = 1;
-
-                $nombre = $_POST['nombre'];
-                $apellido = $_POST['apellido'];
-                $email = $_POST['email'];
-                $telefono = $_POST['telefono'];
-                $nombre_app = $_POST['nombre_app'];
-
-                $target_file = $target_dir . $nombre . $apellido . "-" . basename($_FILES["fileToUpload"]["name"]);
-                $target_filename = $nombre . $apellido . "-" . basename($_FILES["fileToUpload"]["name"]);
-                $file_type = strtolower(pathinfo($target_file,PATHINFO_EXTENSION));
-
-                // Verificar el tamaño del archivo
-                if ($_FILES["fileToUpload"]["size"] > 10000) {
-                    $motivo = "El archivo es demasiado grande.";
-                    $uploadOk = 0;
-                }
-
-                // Permitir solo ciertos formatos de archivo
-                if($file_type != "pub") {
-                    $motivo = "Solo se permiten archivos .pub.";
-                    $uploadOk = 0;
-                }
-
-                // Si $uploadOk está establecido en 0 por un error
-                if ($uploadOk == 0) {
-                    $exito = "Tu archivo no se puede subir. ";
-                } else { // Si todo está bien, intenta subir el archivo
-                    if (move_uploaded_file($_FILES["fileToUpload"]["tmp_name"], $target_file)) {
-                        $exito = "El archivo ha sido subido.";
-                        $array_submit = array($nombre, $apellido, $email, $telefono, $nombre_app, $target_filename);
-                        
-                        $csv_stream = fopen('./uploads/bd.csv', 'a');
-                        if (!$csv_stream) { echo "No se pudo abrir el archivo para guardar los datos"; exit; }
-                        fputcsv($csv_stream, $array_submit);
-                        fclose($csv_stream);
-                    } else {
-                        $uploadOk = 0;
-                        $exito = "Hubo un error al subir ". htmlspecialchars( basename( $_FILES["fileToUpload"]["name"])). ".";
-                    }
-                }
-
-            }
+            
         ?>
         <section class="">
             <div class="container py-2">
@@ -138,24 +51,24 @@ if (isset($_POST['logout'])) {
                             </form>
                         </div>
                         <?php
-                            if ( isset($uploadOk) && $uploadOk == 0 ) {
+                        if ( isset($uploadOk) && $uploadOk == 0 ) {
                         ?>
-                                <div class="card mb-4" style="border-radius: 1rem; background-color: #e06666;">
-                                    <div class="row g-0">
-                                        <div class="d-flex align-items-center">
-                                            <div class="card-body text-black">
-                                                <div class="d-flex align-items-center">
-                                                    <i class="bi bi-cloud-slash-fill me-3"></i>
-                                                    <?php
-                                                        echo $exito . " " . $motivo;
-                                                    ?>
-                                                </div>
+                            <div class="card mb-4" style="border-radius: 1rem; background-color: #e06666;">
+                                <div class="row g-0">
+                                    <div class="d-flex align-items-center">
+                                        <div class="card-body text-black">
+                                            <div class="d-flex align-items-center">
+                                                <i class="bi bi-cloud-slash-fill me-3"></i>
+                                                <?php
+                                                    echo $exito . " " . $motivo;
+                                                ?>
                                             </div>
                                         </div>
                                     </div>
                                 </div>
+                            </div>
                         <?php
-                            } else if ( $uploadOk == 1 ) {
+                            } else if ( isset($uploadOk) && $uploadOk == 1 ) {
                         ?>
                                 <div class="card mb-4" style="border-radius: 1rem; background-color: #9ae18a;">
                                     <div class="row g-0">
@@ -172,7 +85,7 @@ if (isset($_POST['logout'])) {
                                     </div>
                                 </div>
                         <?php
-                            }
+                        }
 
                         if ( $username === 'admin' ) {
                         ?>
@@ -243,36 +156,13 @@ if (isset($_POST['logout'])) {
                                                                                 <input type="hidden" name="nombre_usuario" value="<?php echo $fila[0] . $fila[1]; ?>" />
                                                                                 <input type="hidden" name="nombre_app" value="<?php echo $fila[4]; ?>" />
                                                                                 <input type="hidden" name="clave_pub" value="<?php echo $fila[5]; ?>" />
+                                                                                <input type="hidden" name="id_to_confirm" value="<?php echo $num_fila; ?>" />
                                                                                 <button type="submit" class="btn btn-success btn-sm"
                                                                                     name="confirm"
                                                                                 >
                                                                                     <i class="bi bi-check-lg"></i>
                                                                                 </button>
                                                                             </form>
-                                                                            <!--
-                                                                            <form class="d-inline"
-                                                                                action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>"
-                                                                                method="post" enctype="multipart/form-data"
-                                                                            >
-                                                                                <input type="hidden" name="app" value="<?php echo $fila[4]; ?>" />
-                                                                                <button
-                                                                                    type="submit"
-                                                                                    class="btn btn-primary btn-sm"
-                                                                                    name="add-app"
-                                                                                >
-                                                                                    <i class="bi bi-box"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                            <form class="d-inline">
-                                                                                <button
-                                                                                    type="submit"
-                                                                                    class="btn btn-primary btn-sm"
-                                                                                    name="add-user"
-                                                                                >
-                                                                                    <i class="bi bi-person"></i>
-                                                                                </button>
-                                                                            </form>
-                                                                            -->
                                                                             <form class="d-inline"
                                                                                 action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>"
                                                                                 method="post" enctype="multipart/form-data"
@@ -307,8 +197,8 @@ if (isset($_POST['logout'])) {
                                 <div class="d-flex align-items-center">
                                     <div class="card-body p-4 p-lg-5 text-black">
                                         <div class="d-flex align-items-center mb-3 pb-1">
-                                            <i class="h1 bi bi-person-fill-up m-0 pe-3"></i>
-                                            <span class="h1 fw-bold mb-0">Envía tus datos al administrador</span>
+                                            <i class="h1 bi bi-box2-heart m-0 pe-3"></i>
+                                            <span class="h1 fw-bold mb-0">Añade una petición de despliegue</span>
                                         </div>
                                         <form
                                             action="<?php echo htmlspecialchars($_SERVER["PHP_SELF"]); ?>"
@@ -345,7 +235,7 @@ if (isset($_POST['logout'])) {
                                             <div class="">
                                                 <button type="submit" class="btn btn-primary btn-lg" name="submit">
                                                     <i class="bi bi-cloud-upload-fill pe-1"></i>
-                                                    Enviar datos
+                                                    Enviar datos y crear petición
                                                 </button>
                                             </div>
                                         </form>
