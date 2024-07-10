@@ -1,0 +1,55 @@
+
+- name: Instalar Apache
+  apt:
+    name: apache2
+    state: present
+    update_cache: yes
+
+- name: Crear directorio para el contenido web
+  file:
+    path: /var/www/html
+    state: directory
+
+- name: Copiar contenido de web-client a /var/www/html
+  copy:
+    src: web-client/
+    dest: /var/www/html/
+    owner: www-data
+    group: www-data
+    mode: '0755'
+
+- name: Configurar Apache para escuchar en el puerto 9595
+  lineinfile:
+    path: /etc/apache2/ports.conf
+    regexp: '^Listen 80$'
+    line: 'Listen 9595'
+    state: present
+
+- name: Modificar archivo de sitio default para usar el puerto 9595
+  copy:
+    dest: /etc/apache2/sites-available/000-default.conf
+    content: |
+      <VirtualHost *:9595>
+          ServerAdmin webmaster@localhost
+          DocumentRoot /var/www/html
+          ErrorLog ${APACHE_LOG_DIR}/error.log
+          CustomLog ${APACHE_LOG_DIR}/access.log combined
+      </VirtualHost>
+
+- name: Habilitar módulo rewrite de Apache
+  apache2_module:
+    name: rewrite
+    state: present
+
+- name: Reiniciar Apache para aplicar cambios
+  service:
+    name: apache2
+    state: restarted
+
+- name: Copiar add-request.sh a /home/user
+  copy:
+    src: add-request.sh
+    dest: /home/user/add-request.sh
+    owner: user
+    group: user
+    mode: '0755'

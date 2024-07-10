@@ -1,2 +1,1 @@
-pc-servidor     ansible_host=192.168.2.6    ansible_user=user ansible_become=yes
-pc-cliente      ansible_host=192.168.2.100  ansible_user=user ansible_become=yes
+dokku-server    ansible_host=192.168.2.6    ansible_user=user ansible_become=yes
