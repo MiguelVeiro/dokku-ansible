@@ -11,8 +11,8 @@ class FormProcessor {
 
     public function processRequest() {
         
-        $this->fileManager = new ShellExecutor();
-        $this->shellExecutor = new FileManager();
+        $this->fileManager = new FileManager();
+        $this->shellExecutor = new ShellExecutor();
 
         if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (isset($_POST['confirm'])) {
@@ -32,7 +32,7 @@ class FormProcessor {
         $nombre_app = $_POST['nombre_app'];
         $clave_pub = $_POST['clave_pub'];
 
-        $output = shell_exec('sudo /home/user/add-request.sh ' . escapeshellarg($clave_pub) . ' ' . escapeshellarg($nombre_usuario) . ' ' . escapeshellarg($nombre_app));
+        $output = $this->shellExecutor->executeCommand('sudo /home/user/add-request.sh ' . escapeshellarg($clave_pub) . ' ' . escapeshellarg($nombre_usuario) . ' ' . escapeshellarg($nombre_app));
         
         $this->fileManager->confirmLine($id_to_confirm);
 
