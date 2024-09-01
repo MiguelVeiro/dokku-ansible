@@ -1,10 +1,15 @@
 <?php
 
+include_once "ShellExecutor.php";
+
 class FileManager {
 
     private $repsuesta = NULL;
+    private $shellExecutor;
 
     public function confirmLine($id_to_delete) {
+
+        $this->shellExecutor = new ShellExecutor();
 
         $csv_stream = fopen('./uploads/bd.csv', 'r');
         if (!$csv_stream) {
@@ -18,7 +23,7 @@ class FileManager {
         $num_fila = 0;
         while (($fila = fgetcsv($csv_stream)) !== FALSE) {
             if (strval($num_fila) === $id_to_delete) {
-                #$output = shell_exec('sudo rm ./uploads/' . escapeshellarg($fila[5]));
+                $output = $this->shellExecutor->executeCommand('sudo rm ./uploads/' . escapeshellarg($fila[5]));
             } else {
                 array_push($solicitudes, $fila);
             }
@@ -36,6 +41,8 @@ class FileManager {
 
     public function deleteLine($id_to_delete) {
 
+        $this->shellExecutor = new ShellExecutor();
+
         $csv_stream = fopen('./uploads/bd.csv', 'r');
         if (!$csv_stream) {
             $motivo = "No se pudo abrir el archivo para leer las solicitudes";
@@ -48,7 +55,7 @@ class FileManager {
         $num_fila = 0;
         while (($fila = fgetcsv($csv_stream)) !== FALSE) {
             if (strval($num_fila) === $id_to_delete) {
-                $output = shell_exec('sudo rm ./uploads/' . escapeshellarg($fila[5]));
+                $output = $this->shellExecutor->executeCommand('sudo rm ./uploads/' . escapeshellarg($fila[5]));
             } else {
                 array_push($solicitudes, $fila);
             }
